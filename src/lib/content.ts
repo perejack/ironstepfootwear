@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { getSiteContent } from "@/lib/cms.functions";
+import { getSiteContent } from "@/lib/cms.api";
 import type { Tables } from "@/integrations/supabase/types";
 import {
   products as staticProducts,
@@ -200,10 +199,9 @@ const slugify = (s: string) =>
  * to the built-in catalogue while loading or offline.
  */
 export function useSiteContent() {
-  const fetchContent = useServerFn(getSiteContent);
   const query = useQuery({
     queryKey: ["site-content"],
-    queryFn: () => fetchContent(),
+    queryFn: () => getSiteContent(),
     staleTime: 60_000,
   });
 

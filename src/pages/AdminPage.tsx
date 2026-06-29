@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ExternalLink, Loader2, LogOut, Package, Settings2, Shapes, ShieldX } from "lucide-react";
@@ -8,6 +8,7 @@ import { useSiteContent } from "@/lib/content";
 import { SiteTab } from "@/components/admin/SiteTab";
 import { CategoriesTab } from "@/components/admin/CategoriesTab";
 import { ProductsTab } from "@/components/admin/ProductsTab";
+import { usePageTitle } from "@/lib/use-page-title";
 
 const SUPABASE_PROJECT_ID =
   import.meta.env.VITE_SUPABASE_PROJECT_ID ?? import.meta.env.SUPABASE_PROJECT_ID ?? "unknown";
@@ -43,12 +44,6 @@ async function checkAdminAccess() {
   return { isAdmin: !!data, userId: user.id, email: user.email ?? null };
 }
 
-export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [{ title: "Admin Studio — Iron Step Footwear" }] }),
-  ssr: false,
-  component: AdminPage,
-});
-
 type Tab = "site" | "categories" | "products";
 
 const tabs: { id: Tab; label: string; Icon: typeof Settings2 }[] = [
@@ -57,8 +52,9 @@ const tabs: { id: Tab; label: string; Icon: typeof Settings2 }[] = [
   { id: "products", label: "Products", Icon: Package },
 ];
 
-function AdminPage() {
-  const nav = useNavigate();
+export default function AdminPage() {
+  usePageTitle("Admin Studio — Iron Step Footwear");
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("site");
   const content = useSiteContent();
@@ -77,7 +73,7 @@ function AdminPage() {
     await qc.cancelQueries();
     qc.clear();
     await clearSupabaseSession();
-    nav({ to: "/auth", replace: true });
+    navigate("/auth", { replace: true });
   };
 
   if (adminCheck.isLoading) {

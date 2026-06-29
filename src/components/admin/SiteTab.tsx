@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Loader2, Save } from "lucide-react";
-import { saveSettings } from "@/lib/cms.functions";
+import { saveSettings } from "@/lib/cms.api";
 import { Field, ImageField, inputCls } from "./ImageField";
 import heroShoe from "@/assets/hero-shoe.jpg";
 
@@ -11,14 +10,14 @@ export function SiteTab({ settings }: { settings: Record<string, string> }) {
   const [form, setForm] = useState({ ...settings });
   const [busy, setBusy] = useState(false);
   const qc = useQueryClient();
-  const save = useServerFn(saveSettings);
+
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const submit = async () => {
     setBusy(true);
     try {
-      await save({
-        data: { entries: Object.entries(form).map(([key, value]) => ({ key, value })) },
+      await saveSettings({
+        entries: Object.entries(form).map(([key, value]) => ({ key, value })),
       });
       qc.invalidateQueries({ queryKey: ["site-content"] });
       toast.success("Site content saved — it's live!");

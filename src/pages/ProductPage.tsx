@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 import { Heart, Minus, Plus, ShieldCheck, Truck, RotateCcw, Star, Check, ArrowUpRight } from "lucide-react";
 import { PageShell } from "@/components/Layout";
@@ -6,33 +6,13 @@ import { ProductCard } from "@/components/ProductCard";
 import { getProduct, formatKES } from "@/data/products";
 import { addToCart, toggleSaved, useCart } from "@/store/cart";
 import { useSiteContent } from "@/lib/content";
+import { usePageTitle } from "@/lib/use-page-title";
 
-export const Route = createFileRoute("/product/$id")({
-  head: ({ params }) => {
-    const p = getProduct(params.id);
-    return {
-      meta: [
-        { title: p ? `${p.name} — Iron Step` : "Product — Iron Step" },
-        { name: "description", content: p?.description ?? "Iron Step Footwear" },
-      ],
-    };
-  },
-  component: ProductPage,
-  notFoundComponent: () => (
-    <PageShell>
-      <div className="mx-auto max-w-xl px-5 py-24 text-center">
-        <h1 className="font-display text-4xl">Not found</h1>
-        <Link to="/shop" className="mt-4 inline-block underline">Back to shop</Link>
-      </div>
-    </PageShell>
-  ),
-});
-
-function ProductPage() {
-  const { id } = Route.useParams();
+export default function ProductPage() {
+  const { id = "" } = useParams();
   const { products, settings } = useSiteContent();
   const product = products.find((p) => p.id === id) ?? getProduct(id);
-  const nav = useNavigate();
+  const navigate = useNavigate();
   const { saved } = useCart();
   const [size, setSize] = useState<number | null>(null);
   const [qty, setQty] = useState(1);
@@ -40,7 +20,21 @@ function ProductPage() {
   const [activeImg, setActiveImg] = useState(0);
   const [err, setErr] = useState("");
 
-  if (!product) return null;
+  usePageTitle(product ? `${product.name} — Iron Step` : "Product — Iron Step");
+
+  if (!product) {
+    return (
+      <PageShell>
+        <div className="mx-auto max-w-xl px-5 py-24 text-center">
+          <h1 className="font-display text-4xl">Not found</h1>
+          <Link to="/shop" className="mt-4 inline-block underline">
+            Back to shop
+          </Link>
+        </div>
+      </PageShell>
+    );
+  }
+
   const isSaved = saved.includes(product.id);
   const related = products.filter((p) => p.id !== product.id).slice(0, 3);
   const gallery = [product.image, product.image, product.image, product.image];
@@ -58,8 +52,8 @@ function ProductPage() {
       size,
       qty,
     });
-    if (then === "checkout") nav({ to: "/checkout" });
-    else nav({ to: "/cart" });
+    if (then === "checkout") navigate("/checkout");
+    else navigate("/cart");
   };
 
   return (

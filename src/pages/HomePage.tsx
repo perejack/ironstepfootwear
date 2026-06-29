@@ -1,5 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { useState } from "react";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   ArrowUpRight,
   Truck,
@@ -29,26 +30,8 @@ import avatarBrian from "@/assets/avatar-brian.jpg";
 import avatarAisha from "@/assets/avatar-aisha.jpg";
 import avatarPatrick from "@/assets/avatar-patrick.jpg";
 
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Iron Step Footwear — Footwear made for Kenyan streets" },
-      {
-        name: "description",
-        content:
-          "Iron Step Footwear designs and ships Official, Smart Casual and Sneaker footwear across Kenya. Pay with M-Pesa. Delivered nationwide.",
-      },
-      { property: "og:title", content: "Iron Step Footwear" },
-      {
-        property: "og:description",
-        content: "Premium footwear, designed in Nairobi. Pay with M-Pesa.",
-      },
-    ],
-  }),
-  component: Home,
-});
-
-function Home() {
+export default function HomePage() {
+  usePageTitle("Iron Step Footwear — Footwear made for Kenyan streets");
   const { products, categories, settings, newArrivals } = useSiteContent();
   const [headA, headB] = splitHeadline(settings.hero_headline);
   const heroImg = settings.hero_image_url || heroShoe;
@@ -225,8 +208,7 @@ function Home() {
                     </div>
                   </div>
                   <Link
-                    to="/product/$id"
-                    params={{ id: heroProduct.id }}
+                    to={`/product/${heroProduct.id}`}
                     className="rounded-full bg-foreground text-background px-4 py-2 text-xs font-medium"
                   >
                     KES {formatKES(heroProduct.price)}
@@ -269,8 +251,7 @@ function Home() {
           {categories.map((c, i) => (
             <Link
               key={c.id}
-              to="/shop"
-              search={{ category: c.name }}
+              to={`/shop?category=${encodeURIComponent(c.name)}`}
               className="group relative aspect-[3/4] rounded-3xl overflow-hidden shadow-card animate-fade-up"
               style={{ animationDelay: `${i * 80}ms` }}
             >

@@ -1,25 +1,15 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Loader2, Lock, Mail, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { bootstrapAdmin } from "@/lib/cms.functions";
+import { bootstrapAdmin } from "@/lib/cms.api";
 import { clearSupabaseSession } from "@/lib/clear-supabase-session";
+import { usePageTitle } from "@/lib/use-page-title";
 
-export const Route = createFileRoute("/auth")({
-  head: () => ({
-    meta: [
-      { title: "Admin Sign In — Iron Step Footwear" },
-      { name: "description", content: "Sign in to manage Iron Step Footwear content." },
-    ],
-  }),
-  component: AuthPage,
-});
-
-function AuthPage() {
-  const nav = useNavigate();
-  const bootstrap = useServerFn(bootstrapAdmin);
+export default function AuthPage() {
+  usePageTitle("Admin Sign In — Iron Step Footwear");
+  const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,13 +21,13 @@ function AuthPage() {
       if (!error && data.user) {
         const { error: refreshError } = await supabase.auth.refreshSession();
         if (!refreshError) {
-          nav({ to: "/admin", replace: true });
+          navigate("/admin", { replace: true });
           return;
         }
       }
       await clearSupabaseSession();
     });
-  }, [nav]);
+  }, [navigate]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,11 +57,11 @@ function AuthPage() {
         if (error) throw error;
       }
       try {
-        await bootstrap();
+        await bootstrapAdmin();
       } catch {
         /* role check happens again on the admin page */
       }
-      nav({ to: "/admin", replace: true });
+      navigate("/admin", { replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Authentication failed");
     } finally {

@@ -1,15 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { PageShell } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { products } from "@/data/products";
 import { useCart } from "@/store/cart";
+import { usePageTitle } from "@/lib/use-page-title";
 
-export const Route = createFileRoute("/saved")({
-  head: () => ({ meta: [{ title: "Saved — Iron Step" }] }),
-  component: Saved,
-});
-
-function Saved() {
+export default function SavedPage() {
+  usePageTitle("Saved — Iron Step");
   const { saved } = useCart();
   const list = products.filter((p) => saved.includes(p.id));
   return (

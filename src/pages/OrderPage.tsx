@@ -1,14 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link, useParams } from "react-router-dom";
 import { Check, Package, Truck, Home as HomeIcon } from "lucide-react";
 import { PageShell } from "@/components/Layout";
+import { usePageTitle } from "@/lib/use-page-title";
 
-export const Route = createFileRoute("/order/$id")({
-  head: () => ({ meta: [{ title: "Order confirmed — Iron Step" }] }),
-  component: OrderConfirmation,
-});
-
-function OrderConfirmation() {
-  const { id } = Route.useParams();
+export default function OrderPage() {
+  usePageTitle("Order confirmed — Iron Step");
+  const { id = "" } = useParams();
   const steps = [
     { Icon: Check, label: "Confirmed", done: true },
     { Icon: Package, label: "Packing", done: true },

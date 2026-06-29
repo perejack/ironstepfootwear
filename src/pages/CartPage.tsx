@@ -1,15 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { Minus, Plus, X, ArrowUpRight } from "lucide-react";
 import { PageShell } from "@/components/Layout";
 import { formatKES } from "@/data/products";
 import { removeItem, updateQty, useCart } from "@/store/cart";
+import { usePageTitle } from "@/lib/use-page-title";
 
-export const Route = createFileRoute("/cart")({
-  head: () => ({ meta: [{ title: "Your bag — Iron Step" }] }),
-  component: CartPage,
-});
-
-function CartPage() {
+export default function CartPage() {
+  usePageTitle("Your bag — Iron Step");
   const { cart, subtotal } = useCart();
   const shipping = subtotal >= 5000 || subtotal === 0 ? 0 : 350;
 

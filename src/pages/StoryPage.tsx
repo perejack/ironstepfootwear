@@ -1,19 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { PageShell } from "@/components/Layout";
+import { usePageTitle } from "@/lib/use-page-title";
 import hero from "@/assets/hero-shoe.jpg";
 import catBoots from "@/assets/cat-boots.jpg";
 
-export const Route = createFileRoute("/story")({
-  head: () => ({
-    meta: [
-      { title: "Our story — Iron Step Footwear" },
-      { name: "description", content: "How Iron Step Footwear started in a small Nairobi workshop." },
-    ],
-  }),
-  component: Story,
-});
-
-function Story() {
+export default function StoryPage() {
+  usePageTitle("Our story — Iron Step Footwear");
   return (
     <PageShell>
       <section className="mx-auto max-w-4xl px-5 sm:px-8 pt-14 pb-10">

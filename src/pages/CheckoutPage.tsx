@@ -1,20 +1,17 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "react-router-dom";
 import { useState, type FormEvent } from "react";
 import { ShieldCheck, Smartphone, CreditCard, Banknote } from "lucide-react";
 import { PageShell } from "@/components/Layout";
 import { formatKES } from "@/data/products";
 import { clearCart, useCart } from "@/store/cart";
-
-export const Route = createFileRoute("/checkout")({
-  head: () => ({ meta: [{ title: "Checkout — Iron Step" }] }),
-  component: Checkout,
-});
+import { usePageTitle } from "@/lib/use-page-title";
 
 const counties = ["Nairobi", "Mombasa", "Kisumu", "Nakuru", "Eldoret", "Thika", "Naivasha", "Other"];
 
-function Checkout() {
+export default function CheckoutPage() {
+  usePageTitle("Checkout — Iron Step");
   const { cart, subtotal } = useCart();
-  const nav = useNavigate();
+  const navigate = useNavigate();
   const shipping = subtotal >= 5000 ? 0 : 350;
   const [pay, setPay] = useState<"mpesa" | "card" | "cod">("mpesa");
 
@@ -22,7 +19,7 @@ function Checkout() {
     e.preventDefault();
     const order = Math.random().toString(36).slice(2, 8).toUpperCase();
     clearCart();
-    nav({ to: "/order/$id", params: { id: order } });
+    navigate(`/order/${order}`);
   };
 
   if (cart.length === 0) {

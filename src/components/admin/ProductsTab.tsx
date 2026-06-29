@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Loader2, Pencil, Plus, Save, Trash2, X } from "lucide-react";
-import { deleteProduct, saveProduct } from "@/lib/cms.functions";
+import { deleteProduct, saveProduct } from "@/lib/cms.api";
 import { productImage, type DbCategory, type DbProduct } from "@/lib/content";
 import { formatKES } from "@/data/products";
 import { Field, ImageField, inputCls } from "./ImageField";
@@ -86,8 +85,6 @@ export function ProductsTab({
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
   const qc = useQueryClient();
-  const saveFn = useServerFn(saveProduct);
-  const delFn = useServerFn(deleteProduct);
 
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) =>
     setDraft((d) => (d ? { ...d, [k]: v } : d));
@@ -111,8 +108,7 @@ export function ProductsTab({
     const orig = draft.original_price.trim() ? Number(draft.original_price) : null;
     setBusy(true);
     try {
-      await saveFn({
-        data: {
+      await saveProduct({
           id: draft.id,
           slug,
           name: draft.name.trim(),
@@ -137,7 +133,6 @@ export function ProductsTab({
           is_new_arrival: draft.is_new_arrival,
           is_active: draft.is_active,
           sort_order: draft.sort_order,
-        },
       });
       toast.success(draft.id ? "Product updated" : "Product added");
       qc.invalidateQueries({ queryKey: ["site-content"] });
@@ -152,7 +147,7 @@ export function ProductsTab({
   const remove = async (p: DbProduct) => {
     if (!window.confirm(`Delete "${p.name}" permanently?`)) return;
     try {
-      await delFn({ data: { id: p.id } });
+      await deleteProduct({ id: p.id });
       qc.invalidateQueries({ queryKey: ["site-content"] });
       toast.success("Product deleted");
     } catch (e) {

@@ -1,25 +1,15 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState } from "react";
 import { PageShell } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { useSiteContent } from "@/lib/content";
+import { usePageTitle } from "@/lib/use-page-title";
 
-export const Route = createFileRoute("/shop")({
-  validateSearch: (s: Record<string, unknown>) => ({
-    category: typeof s.category === "string" && s.category ? s.category : "All",
-  }),
-  head: () => ({
-    meta: [
-      { title: "Shop — Iron Step Footwear" },
-      { name: "description", content: "Browse Official, Smart Casuals and Sneakers from Iron Step Footwear Kenya." },
-    ],
-  }),
-  component: Shop,
-});
-
-function Shop() {
-  const { category: active } = Route.useSearch();
-  const navigate = useNavigate({ from: Route.fullPath });
+export default function ShopPage() {
+  usePageTitle("Shop — Iron Step Footwear");
+  const [searchParams] = useSearchParams();
+  const active = searchParams.get("category") || "All";
+  const navigate = useNavigate();
   const { products, categories } = useSiteContent();
   const [sort, setSort] = useState<"new" | "low" | "high">("new");
 
@@ -45,9 +35,10 @@ function Shop() {
             {cats.map((c) => (
               <button
                 key={c}
-                onClick={() =>
-                  navigate({ search: { category: c }, replace: true, resetScroll: false })
-                }
+                onClick={() => {
+                  const next = c === "All" ? "/shop" : `/shop?category=${encodeURIComponent(c)}`;
+                  navigate(next, { replace: true });
+                }}
                 className={`shrink-0 rounded-full px-4 py-2 text-xs font-medium tracking-wide transition ${
                   active === c
                     ? "bg-primary text-primary-foreground"

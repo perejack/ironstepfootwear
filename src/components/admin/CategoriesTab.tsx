@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Loader2, Plus, Save, Trash2 } from "lucide-react";
-import { deleteCategory, saveCategory } from "@/lib/cms.functions";
+import { deleteCategory, saveCategory } from "@/lib/cms.api";
 import { categoryImageFallbacks, type DbCategory } from "@/lib/content";
 import { Field, ImageField, inputCls } from "./ImageField";
 
@@ -12,8 +11,6 @@ function CategoryCard({ cat }: { cat: DbCategory }) {
   const [image, setImage] = useState<string | null>(cat.image_url);
   const [busy, setBusy] = useState(false);
   const qc = useQueryClient();
-  const save = useServerFn(saveCategory);
-  const del = useServerFn(deleteCategory);
 
   const submit = async () => {
     if (!name.trim()) {
@@ -22,7 +19,7 @@ function CategoryCard({ cat }: { cat: DbCategory }) {
     }
     setBusy(true);
     try {
-      await save({ data: { id: cat.id, name: name.trim(), image_url: image } });
+      await saveCategory({ id: cat.id, name: name.trim(), image_url: image });
       qc.invalidateQueries({ queryKey: ["site-content"] });
       toast.success(`${name} saved`);
     } catch (e) {
@@ -37,7 +34,7 @@ function CategoryCard({ cat }: { cat: DbCategory }) {
       return;
     setBusy(true);
     try {
-      await del({ data: { id: cat.id } });
+      await deleteCategory({ id: cat.id });
       qc.invalidateQueries({ queryKey: ["site-content"] });
       toast.success("Category deleted");
     } catch (e) {
@@ -85,7 +82,6 @@ export function CategoriesTab({ categories }: { categories: DbCategory[] }) {
   const [newName, setNewName] = useState("");
   const [busy, setBusy] = useState(false);
   const qc = useQueryClient();
-  const save = useServerFn(saveCategory);
 
   const add = async () => {
     const name = newName.trim();
@@ -99,7 +95,7 @@ export function CategoriesTab({ categories }: { categories: DbCategory[] }) {
       .replace(/^-+|-+$/g, "");
     setBusy(true);
     try {
-      await save({ data: { name, slug, sort_order: categories.length + 1 } });
+      await saveCategory({ name, slug, sort_order: categories.length + 1 });
       qc.invalidateQueries({ queryKey: ["site-content"] });
       setNewName("");
       toast.success(`${name} added`);
