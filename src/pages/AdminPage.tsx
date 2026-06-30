@@ -9,9 +9,10 @@ import { SiteTab } from "@/components/admin/SiteTab";
 import { CategoriesTab } from "@/components/admin/CategoriesTab";
 import { ProductsTab } from "@/components/admin/ProductsTab";
 import { usePageTitle } from "@/lib/use-page-title";
+import { TEST_SUPABASE } from "@/lib/test-config";
 
 const SUPABASE_PROJECT_ID =
-  import.meta.env.VITE_SUPABASE_PROJECT_ID ?? import.meta.env.SUPABASE_PROJECT_ID ?? "unknown";
+  import.meta.env.VITE_SUPABASE_PROJECT_ID ?? TEST_SUPABASE.projectId;
 
 async function checkAdminAccess() {
   const { data: sessionData } = await supabase.auth.getSession();
