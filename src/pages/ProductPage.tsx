@@ -7,6 +7,7 @@ import { getProduct, formatKES } from "@/data/products";
 import { addToCart, toggleSaved, useCart } from "@/store/cart";
 import { useSiteContent } from "@/lib/content";
 import { usePageTitle } from "@/lib/use-page-title";
+import { resolveColor } from "@/lib/color-utils";
 
 export default function ProductPage() {
   const { id = "" } = useParams();
@@ -69,7 +70,7 @@ export default function ProductPage() {
         <div className="lg:sticky lg:top-24 lg:self-start">
           <div
             className="relative aspect-square rounded-[2rem] overflow-hidden shadow-soft"
-            style={{ background: product.swatch }}
+            style={{ background: resolveColor(product.swatch) }}
           >
             <img
               src={gallery[activeImg]}
@@ -96,7 +97,7 @@ export default function ProductPage() {
                 className={`relative aspect-square rounded-2xl overflow-hidden transition ${
                   activeImg === i ? "ring-2 ring-foreground" : "opacity-80 hover:opacity-100"
                 }`}
-                style={{ background: product.swatch }}
+                style={{ background: resolveColor(product.swatch) }}
               >
                 <img src={g} alt="" className="absolute inset-0 h-full w-full object-cover" />
               </button>
@@ -152,7 +153,7 @@ export default function ProductPage() {
                   className={`h-11 w-11 rounded-full transition ${
                     colorIdx === i ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "ring-1 ring-border"
                   }`}
-                  style={{ background: c }}
+                  style={{ background: resolveColor(c) }}
                   aria-label={`Color ${i + 1}`}
                 />
               ))}

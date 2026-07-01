@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Store, Heart, ShoppingBag, BookOpen, Search, Menu, X } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { Home, Store, Heart, ShoppingBag, BookOpen, Search, Menu, X, Shield } from "lucide-react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useCart } from "@/store/cart";
 import logo from "@/assets/logo-iron-step.png";
 
@@ -195,6 +195,18 @@ function Logo({ variant = "header" }: { variant?: "header" | "footer" }) {
 export function TopBar() {
   const { count } = useCart();
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  const closeMenu = () => setOpen(false);
+
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-background/80 border-b border-border/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-8 h-[4.75rem] sm:h-16 flex items-center justify-between gap-2">
@@ -227,35 +239,43 @@ export function TopBar() {
         </div>
       </div>
       {open && (
-        <div className="fixed inset-0 z-50 bg-background animate-fade-up">
-          <div className="px-4 h-[4.75rem] sm:h-16 flex items-center justify-between border-b border-border/60">
+        <div className="fixed inset-0 z-50 md:hidden flex flex-col bg-cream-soft">
+          <div className="shrink-0 px-4 h-[4.75rem] sm:h-16 flex items-center justify-between border-b border-border/60 bg-cream-soft">
             <Logo />
             <button
-              onClick={() => setOpen(false)}
+              onClick={closeMenu}
               className={`${iconShellBase} ${headerTones.menu.shell}`}
-              aria-label="Close"
+              aria-label="Close menu"
             >
               <X className={`h-5 w-5 transition-colors duration-300 ${headerTones.menu.icon}`} strokeWidth={2} />
             </button>
           </div>
-          <div className="px-6 py-10 flex flex-col gap-6 text-3xl font-display">
+          <nav className="flex-1 overflow-y-auto px-6 py-10 flex flex-col gap-1 bg-cream-soft">
             {[
               { to: "/shop", label: "Shop all" },
               { to: "/shop?category=Official", label: "Official" },
               { to: "/shop?category=Smart%20Casuals", label: "Smart Casuals" },
               { to: "/shop?category=Sneakers", label: "Sneakers" },
               { to: "/story", label: "Our story" },
-            ].map((l, i) => (
+            ].map((l) => (
               <Link
-                key={i}
+                key={l.to}
                 to={l.to}
-                onClick={() => setOpen(false)}
-                className="border-b border-border/60 pb-4 hover:text-primary transition"
+                onClick={closeMenu}
+                className="border-b border-border/60 py-4 text-3xl font-display hover:text-primary transition"
               >
                 {l.label}
               </Link>
             ))}
-          </div>
+            <Link
+              to="/admin"
+              onClick={closeMenu}
+              className="mt-4 inline-flex items-center gap-2.5 rounded-2xl bg-primary/10 border border-primary/20 px-5 py-4 text-lg font-medium text-primary hover:bg-primary hover:text-primary-foreground transition"
+            >
+              <Shield className="h-5 w-5" />
+              Admin
+            </Link>
+          </nav>
         </div>
       )}
     </header>

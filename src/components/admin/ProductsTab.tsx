@@ -3,6 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { deleteProduct, saveProduct } from "@/lib/cms.api";
+import { parseColorList, resolveColor } from "@/lib/color-utils";
+import { ColorSwatchPreview } from "@/components/admin/ColorField";
 import { productImage, type DbCategory, type DbProduct } from "@/lib/content";
 import { formatKES } from "@/data/products";
 import { Field, ImageField, inputCls } from "./ImageField";
@@ -122,8 +124,8 @@ export function ProductsTab({
           reviews: Math.max(0, Math.round(Number(draft.reviews) || 0)),
           badge: draft.badge || null,
           image_url: draft.image_url,
-          swatch: draft.swatch || null,
-          colors: draft.colors.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 10),
+          swatch: resolveColor(draft.swatch) || null,
+          colors: parseColorList(draft.colors),
           features: draft.features.split("\n").map((s) => s.trim()).filter(Boolean).slice(0, 12),
           sizes: draft.sizes
             .split(",")
@@ -235,11 +237,35 @@ export function ProductsTab({
             <Field label="Sizes (comma separated EU)">
               <input className={inputCls} value={draft.sizes} onChange={(e) => set("sizes", e.target.value)} />
             </Field>
-            <Field label="Colours (comma separated hex)">
-              <input className={inputCls} value={draft.colors} onChange={(e) => set("colors", e.target.value)} placeholder="#1a1a1a, #e25822" />
+            <Field label="Colours (type names — e.g. black, burgundy, cream)">
+              <input
+                className={inputCls}
+                value={draft.colors}
+                onChange={(e) => set("colors", e.target.value)}
+                placeholder="black, burgundy, cream, orange"
+              />
+              <ColorSwatchPreview value={draft.colors} />
+              <p className="mt-1.5 text-[11px] text-muted-foreground">
+                Separate with commas. Use plain words like <span className="font-medium">navy</span> or{" "}
+                <span className="font-medium">mustard</span> — no codes needed.
+              </p>
             </Field>
-            <Field label="Card background (CSS colour)">
-              <input className={inputCls} value={draft.swatch} onChange={(e) => set("swatch", e.target.value)} />
+            <Field label="Card background colour">
+              <input
+                className={inputCls}
+                value={draft.swatch}
+                onChange={(e) => set("swatch", e.target.value)}
+                placeholder="cream, sand, or #efe6d3"
+              />
+              {draft.swatch.trim() ? (
+                <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                  <span
+                    className="h-6 w-10 rounded-md ring-1 ring-border"
+                    style={{ background: resolveColor(draft.swatch) }}
+                  />
+                  Preview
+                </div>
+              ) : null}
             </Field>
           </div>
 

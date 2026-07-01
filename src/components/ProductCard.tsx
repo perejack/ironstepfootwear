@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Star, ShoppingBag } from "lucide-react";
 import { formatKES, type Product } from "@/data/products";
 import { addToCart } from "@/store/cart";
+import { resolveColor } from "@/lib/color-utils";
 import { toast } from "sonner";
 
 export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
@@ -26,7 +27,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
       <Link
         to={`/product/${product.id}`}
         className="block relative overflow-hidden rounded-3xl aspect-square shadow-card"
-        style={{ background: product.swatch }}
+        style={{ background: resolveColor(product.swatch) }}
       >
         <img
           src={product.image}
@@ -71,7 +72,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
             <span
               key={c}
               className="h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full ring-1 ring-border"
-              style={{ background: c }}
+              style={{ background: resolveColor(c) }}
             />
           ))}
         </div>
