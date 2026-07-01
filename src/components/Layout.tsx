@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { Home, Store, Heart, ShoppingBag, BookOpen, Search, Menu, X, Shield } from "lucide-react";
 import { useState, useEffect, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useCart } from "@/store/cart";
 import logo from "@/assets/logo-iron-step.png";
 
@@ -137,15 +138,17 @@ function HeaderIconLink({
   label,
   badge,
   children,
+  className = "",
 }: {
   to: string;
   tone: IconTone;
   label: string;
   badge?: number;
   children: ReactNode;
+  className?: string;
 }) {
   return (
-    <Link to={to} aria-label={label} className={`${iconShellBase} ${tone.shell}`}>
+    <Link to={to} aria-label={label} className={`${iconShellBase} ${tone.shell} ${className}`}>
       <span className={`transition-colors duration-300 ${tone.icon}`}>{children}</span>
       {badge ? (
         <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-to-br from-[#e25822] to-[#c44b3f] px-1 text-[9px] font-bold text-white shadow-md ring-2 ring-background">
@@ -192,6 +195,60 @@ function Logo({ variant = "header" }: { variant?: "header" | "footer" }) {
 }
 
 
+function MobileMenu({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  if (!open || typeof document === "undefined") return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[200] flex flex-col bg-[#f5efdf] md:hidden">
+      <div className="shrink-0 px-4 h-[4.75rem] flex items-center justify-between border-b border-border/70 bg-[#f5efdf] shadow-sm">
+        <Logo />
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-md ring-2 ring-primary/20 active:scale-95 transition-transform"
+          aria-label="Close menu"
+        >
+          <X className="h-5 w-5" strokeWidth={2.5} />
+        </button>
+      </div>
+      <nav className="flex-1 overflow-y-auto px-6 py-8 flex flex-col gap-1 bg-[#f5efdf]">
+        {[
+          { to: "/shop", label: "Shop all" },
+          { to: "/shop?category=Official", label: "Official" },
+          { to: "/shop?category=Smart%20Casuals", label: "Smart Casuals" },
+          { to: "/shop?category=Sneakers", label: "Sneakers" },
+          { to: "/story", label: "Our story" },
+          { to: "/saved", label: "Saved" },
+        ].map((l) => (
+          <Link
+            key={l.to}
+            to={l.to}
+            onClick={onClose}
+            className="border-b border-border/70 py-4 text-3xl font-display text-foreground hover:text-primary transition"
+          >
+            {l.label}
+          </Link>
+        ))}
+        <Link
+          to="/admin"
+          onClick={onClose}
+          className="mt-6 inline-flex items-center gap-2.5 rounded-2xl bg-primary text-primary-foreground px-5 py-4 text-lg font-semibold shadow-md hover:opacity-90 transition"
+        >
+          <Shield className="h-5 w-5" />
+          Admin
+        </Link>
+      </nav>
+    </div>,
+    document.body,
+  );
+}
+
 export function TopBar() {
   const { count } = useCart();
   const [open, setOpen] = useState(false);
@@ -208,8 +265,9 @@ export function TopBar() {
   const closeMenu = () => setOpen(false);
 
   return (
-    <header className="sticky top-0 z-40 backdrop-blur-md bg-background/80 border-b border-border/60">
-      <div className="mx-auto max-w-7xl px-4 sm:px-8 h-[4.75rem] sm:h-16 flex items-center justify-between gap-2">
+    <>
+    <header className="sticky top-0 z-40 bg-background/95 border-b border-border/60 supports-[backdrop-filter]:bg-background/90 supports-[backdrop-filter]:backdrop-blur-md">
+      <div className="mx-auto max-w-7xl px-3 sm:px-8 h-[4.75rem] sm:h-16 flex items-center justify-between gap-2">
         <Logo />
         <nav className="hidden md:flex items-center gap-8 text-sm">
           <Link to="/shop" className="hover:text-primary transition">Shop</Link>
@@ -218,67 +276,30 @@ export function TopBar() {
           <Link to="/shop?category=Sneakers" className="hover:text-primary transition">Sneakers</Link>
           <Link to="/story" className="hover:text-primary transition">Story</Link>
         </nav>
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <HeaderIconButton tone={headerTones.search} label="Search">
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+          <HeaderIconButton tone={headerTones.search} label="Search" className="hidden sm:flex">
             <Search className="h-[18px] w-[18px]" strokeWidth={2} />
           </HeaderIconButton>
-          <HeaderIconLink to="/saved" tone={headerTones.saved} label="Saved">
+          <HeaderIconLink to="/saved" tone={headerTones.saved} label="Saved" className="hidden sm:flex">
             <Heart className="h-[18px] w-[18px]" strokeWidth={2} />
           </HeaderIconLink>
           <HeaderIconLink to="/cart" tone={headerTones.cart} label="Cart" badge={count > 0 ? count : undefined}>
             <ShoppingBag className="h-[18px] w-[18px]" strokeWidth={2} />
           </HeaderIconLink>
-          <HeaderIconButton
-            tone={headerTones.menu}
-            label="Menu"
+          <button
+            type="button"
             onClick={() => setOpen(true)}
-            className="md:hidden"
+            className="md:hidden flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-md ring-2 ring-primary/20 active:scale-95 transition-transform"
+            aria-label="Open menu"
+            aria-expanded={open}
           >
-            <Menu className="h-[18px] w-[18px]" strokeWidth={2} />
-          </HeaderIconButton>
+            <Menu className="h-5 w-5" strokeWidth={2.5} />
+          </button>
         </div>
       </div>
-      {open && (
-        <div className="fixed inset-0 z-50 md:hidden flex flex-col bg-cream-soft">
-          <div className="shrink-0 px-4 h-[4.75rem] sm:h-16 flex items-center justify-between border-b border-border/60 bg-cream-soft">
-            <Logo />
-            <button
-              onClick={closeMenu}
-              className={`${iconShellBase} ${headerTones.menu.shell}`}
-              aria-label="Close menu"
-            >
-              <X className={`h-5 w-5 transition-colors duration-300 ${headerTones.menu.icon}`} strokeWidth={2} />
-            </button>
-          </div>
-          <nav className="flex-1 overflow-y-auto px-6 py-10 flex flex-col gap-1 bg-cream-soft">
-            {[
-              { to: "/shop", label: "Shop all" },
-              { to: "/shop?category=Official", label: "Official" },
-              { to: "/shop?category=Smart%20Casuals", label: "Smart Casuals" },
-              { to: "/shop?category=Sneakers", label: "Sneakers" },
-              { to: "/story", label: "Our story" },
-            ].map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                onClick={closeMenu}
-                className="border-b border-border/60 py-4 text-3xl font-display hover:text-primary transition"
-              >
-                {l.label}
-              </Link>
-            ))}
-            <Link
-              to="/admin"
-              onClick={closeMenu}
-              className="mt-4 inline-flex items-center gap-2.5 rounded-2xl bg-primary/10 border border-primary/20 px-5 py-4 text-lg font-medium text-primary hover:bg-primary hover:text-primary-foreground transition"
-            >
-              <Shield className="h-5 w-5" />
-              Admin
-            </Link>
-          </nav>
-        </div>
-      )}
     </header>
+    <MobileMenu open={open} onClose={closeMenu} />
+    </>
   );
 }
 
