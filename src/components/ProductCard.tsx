@@ -19,6 +19,15 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
     toast.success(`${product.name} added · size ${size}`);
   };
 
+  const variantThumbs = (product.variants ?? [])
+    .filter((v) => v.label.trim())
+    .slice(0, 4)
+    .map((v) => ({
+      label: v.label,
+      color: v.color || v.label,
+      image: v.image_url || product.image,
+    }));
+
   return (
     <article
       className="group flex flex-col animate-fade-up"
@@ -45,6 +54,22 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
             −{Math.round((1 - product.price / product.originalPrice) * 100)}%
           </span>
         )}
+
+        {variantThumbs.length > 1 ? (
+          <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2">
+            {variantThumbs.map((t) => (
+              <span
+                key={t.label}
+                className="relative h-11 w-11 rounded-2xl overflow-hidden ring-1 ring-border/70 bg-background/40 backdrop-blur"
+                style={{ background: resolveColor(t.color) }}
+                title={t.label}
+                aria-label={t.label}
+              >
+                <img src={t.image} alt={t.label} className="absolute inset-0 h-full w-full object-cover" />
+              </span>
+            ))}
+          </div>
+        ) : null}
       </Link>
 
       <div className="mt-4 flex items-center gap-1.5 text-xs">
