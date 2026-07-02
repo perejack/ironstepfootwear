@@ -4,6 +4,7 @@ import mara from "@/assets/product-mara.jpg";
 import rift from "@/assets/product-rift.jpg";
 import nairobi from "@/assets/product-nairobi.jpg";
 import hero from "@/assets/hero-shoe.jpg";
+import type { ProductVariant } from "@/lib/product-variants";
 
 export type Category = "Official" | "Smart Casuals" | "Sneakers";
 
@@ -21,6 +22,11 @@ export type Product = {
   image: string;
   swatch: string;
   colors: string[];
+  /** Multiple colourways with their own photos (same product page). */
+  variants: ProductVariant[];
+  /** Links separate product rows as one shoe style (e.g. savanna-runner). */
+  styleKey?: string;
+  colorLabel?: string;
   description: string;
   features: string[];
   sizes: number[];
@@ -43,6 +49,10 @@ export const products: Product[] = [
     image: savanna,
     swatch: "oklch(0.85 0.10 75)",
     colors: ["#e25822", "#1a1a1a"],
+    variants: [
+      { label: "Orange", color: "orange", image_url: null },
+      { label: "Black", color: "black", image_url: null },
+    ],
     description:
       "A featherweight runner engineered for Nairobi pavements and weekend trails. Knit upper, foam midsole, breathable from morning matatu to evening jog.",
     features: ["Breathable engineered knit", "Cushioned EVA midsole", "Rubber outsole grip", "Recycled laces"],
@@ -61,6 +71,7 @@ export const products: Product[] = [
     image: kibera,
     swatch: "oklch(0.92 0.03 80)",
     colors: ["#efe6d3", "#1a1a1a"],
+    variants: [],
     description:
       "Heritage canvas court shoe. A daily classic, hand-finished with a vulcanised rubber sole that softens beautifully with wear.",
     features: ["12oz cotton canvas", "Vulcanised rubber sole", "Cotton terry lining", "Removable insole"],
@@ -78,6 +89,7 @@ export const products: Product[] = [
     image: mara,
     swatch: "oklch(0.88 0.05 75)",
     colors: ["#f5e7d0", "#cfd8c7"],
+    variants: [],
     description:
       "Soft-as-sand runner with a sculpted heel cradle. Built for long walks, late commutes and quiet Sundays.",
     features: ["Sock-fit collar", "Energy-return foam", "Recycled mesh upper", "Reflective heel tab"],
@@ -96,6 +108,7 @@ export const products: Product[] = [
     image: rift,
     swatch: "oklch(0.75 0.09 70)",
     colors: ["#1a1a1a", "#5b3a23"],
+    variants: [],
     description:
       "Hand-finished full-grain leather Chelsea boot with a chunky lugged sole for grip in every season.",
     features: ["Full-grain leather", "Elastic side panels", "Goodyear welted", "Lugged rubber sole"],
@@ -113,6 +126,7 @@ export const products: Product[] = [
     image: nairobi,
     swatch: "oklch(0.45 0.05 40)",
     colors: ["#1a1a1a", "#5b3a23"],
+    variants: [],
     description:
       "A clean, modern derby. Hand-polished calfskin over a soft leather lining — boardroom by morning, dinner by night.",
     features: ["Polished calfskin", "Blake-stitched", "Leather insole", "Cushioned heel"],
@@ -131,6 +145,7 @@ export const products: Product[] = [
     image: hero,
     swatch: "oklch(0.55 0.14 25)",
     colors: ["#5a1a2a", "#1a1a1a"],
+    variants: [],
     description:
       "The shoe that started the studio. Burgundy aniline leather, a tonal sole, and a silhouette refined over twelve prototypes.",
     features: ["Aniline-dyed leather", "Memory-foam footbed", "Numbered batch", "Hand-stitched welt"],

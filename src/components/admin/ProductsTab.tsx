@@ -6,6 +6,8 @@ import { deleteProduct, saveProduct } from "@/lib/cms.api";
 import { parseColorList, resolveColor } from "@/lib/color-utils";
 import { ColorSwatchPreview } from "@/components/admin/ColorField";
 import { productImage, type DbCategory, type DbProduct } from "@/lib/content";
+import { parseDbVariants, type ProductVariant } from "@/lib/product-variants";
+import { VariantsEditor } from "./VariantsEditor";
 import { formatKES } from "@/data/products";
 import { Field, ImageField, inputCls } from "./ImageField";
 
@@ -27,6 +29,7 @@ type Draft = {
   colors: string;
   features: string;
   sizes: string;
+  variants: ProductVariant[];
   is_new_arrival: boolean;
   is_active: boolean;
   sort_order: number;
@@ -49,6 +52,7 @@ const emptyDraft = (categories: DbCategory[], count: number): Draft => ({
   colors: "#1a1a1a",
   features: "",
   sizes: "40, 41, 42, 43, 44",
+  variants: [],
   is_new_arrival: true,
   is_active: true,
   sort_order: count + 1,
@@ -72,6 +76,7 @@ const toDraft = (p: DbProduct): Draft => ({
   colors: p.colors.join(", "),
   features: p.features.join("\n"),
   sizes: p.sizes.join(", "),
+  variants: parseDbVariants(p.variants),
   is_new_arrival: p.is_new_arrival,
   is_active: p.is_active,
   sort_order: p.sort_order,
@@ -108,6 +113,15 @@ export function ProductsTab({
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");
     const orig = draft.original_price.trim() ? Number(draft.original_price) : null;
+    const variants = draft.variants
+      .filter((v) => v.label.trim())
+      .slice(0, 4)
+      .map((v) => ({
+        label: v.label.trim(),
+        color: resolveColor(v.color || v.label),
+        image_url: v.image_url,
+      }));
+    const colorsFromVariants = variants.map((v) => v.color);
     setBusy(true);
     try {
       await saveProduct({
@@ -123,9 +137,10 @@ export function ProductsTab({
           rating: Math.min(5, Math.max(0, Number(draft.rating) || 4.8)),
           reviews: Math.max(0, Math.round(Number(draft.reviews) || 0)),
           badge: draft.badge || null,
-          image_url: draft.image_url,
+          image_url: variants[0]?.image_url || draft.image_url,
           swatch: resolveColor(draft.swatch) || null,
-          colors: parseColorList(draft.colors),
+          colors: colorsFromVariants.length > 0 ? colorsFromVariants : parseColorList(draft.colors),
+          variants,
           features: draft.features.split("\n").map((s) => s.trim()).filter(Boolean).slice(0, 12),
           sizes: draft.sizes
             .split(",")
@@ -275,15 +290,24 @@ export function ProductsTab({
           <Field label="Features (one per line)">
             <textarea rows={3} className={inputCls} value={draft.features} onChange={(e) => set("features", e.target.value)} />
           </Field>
-          <Field label="Product image">
+          <Field label="Main product image">
             <ImageField
               value={draft.image_url}
               fallback={draft.slug ? productImage({ image_url: null, slug: draft.slug }) : undefined}
               aspect="aspect-square max-w-[220px]"
               onChange={(url) => set("image_url", url)}
-              label="Upload photo"
+              label="Upload default photo"
             />
+            <p className="mt-1.5 text-[11px] text-muted-foreground">
+              Used as fallback. Add colour photos below — each appears as a thumbnail on the product page.
+            </p>
           </Field>
+
+          <VariantsEditor
+            variants={draft.variants}
+            fallbackSlug={draft.slug}
+            onChange={(variants) => set("variants", variants.slice(0, 4))}
+          />
 
           <div className="flex flex-wrap gap-5 pt-1">
             <label className="inline-flex items-center gap-2 text-sm">

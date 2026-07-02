@@ -56,6 +56,12 @@ async function assertAdmin() {
   return user;
 }
 
+const variantSchema = z.object({
+  label: z.string().min(1).max(40),
+  color: z.string().max(40).default(""),
+  image_url: z.string().max(2000).nullable(),
+});
+
 const productSchema = z.object({
   id: z.string().uuid().optional(),
   slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/),
@@ -72,6 +78,14 @@ const productSchema = z.object({
   image_url: z.string().max(2000).nullable(),
   swatch: z.string().max(100).nullable(),
   colors: z.array(z.string().max(40)).max(10),
+  variants: z.array(variantSchema).max(4).default([]),
+  style_key: z
+    .string()
+    .max(80)
+    .regex(/^[a-z0-9-]*$/)
+    .nullable()
+    .optional(),
+  color_label: z.string().max(40).nullable().optional(),
   features: z.array(z.string().max(140)).max(12),
   sizes: z.array(z.number().int().min(20).max(60)).max(20),
   is_new_arrival: z.boolean(),

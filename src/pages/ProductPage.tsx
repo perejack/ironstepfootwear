@@ -1,13 +1,15 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Heart, Minus, Plus, ShieldCheck, Truck, RotateCcw, Star, Check, ArrowUpRight } from "lucide-react";
 import { PageShell } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
+import { ProductColorPicker } from "@/components/ProductColorPicker";
 import { getProduct, formatKES } from "@/data/products";
 import { addToCart, toggleSaved, useCart } from "@/store/cart";
 import { useSiteContent } from "@/lib/content";
 import { usePageTitle } from "@/lib/use-page-title";
 import { resolveColor } from "@/lib/color-utils";
+import { getProductGallery, type ColorwayOption } from "@/lib/product-variants";
 
 export default function ProductPage() {
   const { id = "" } = useParams();
@@ -17,9 +19,32 @@ export default function ProductPage() {
   const { saved } = useCart();
   const [size, setSize] = useState<number | null>(null);
   const [qty, setQty] = useState(1);
-  const [colorIdx, setColorIdx] = useState(0);
   const [activeImg, setActiveImg] = useState(0);
   const [err, setErr] = useState("");
+
+  const gallery = useMemo(
+    () => (product ? getProductGallery(product, products) : []),
+    [product, products],
+  );
+
+  const [selectedKey, setSelectedKey] = useState("");
+
+  useEffect(() => {
+    if (!product) return;
+    const g = getProductGallery(product, products);
+    setSelectedKey(g[0]?.key ?? product.id);
+    setActiveImg(0);
+  }, [product, products]);
+
+  const activeColorway = gallery.find((o) => o.key === selectedKey) ?? gallery[activeImg] ?? gallery[0];
+  const heroImage = activeColorway?.image ?? product?.image ?? "";
+  const heroLabel = activeColorway?.label ?? product?.name ?? "";
+
+  const onSelectColorway = (option: ColorwayOption) => {
+    setSelectedKey(option.key);
+    const idx = gallery.findIndex((g) => g.key === option.key);
+    if (idx >= 0) setActiveImg(idx);
+  };
 
   usePageTitle(product ? `${product.name} — Iron Step` : "Product — Iron Step");
 
@@ -38,18 +63,19 @@ export default function ProductPage() {
 
   const isSaved = saved.includes(product.id);
   const related = products.filter((p) => p.id !== product.id).slice(0, 3);
-  const gallery = [product.image, product.image, product.image, product.image];
+  const thumbCols = Math.min(4, Math.max(1, gallery.length));
 
   const buy = (then?: "checkout") => {
     if (!size) {
       setErr("Select a size");
       return;
     }
+    const colorNote = activeColorway?.label ? ` · ${activeColorway.label}` : "";
     addToCart({
       productId: product.id,
-      name: product.name,
+      name: `${product.name}${colorNote}`,
       price: product.price,
-      image: product.image,
+      image: heroImage,
       size,
       qty,
     });
@@ -70,13 +96,18 @@ export default function ProductPage() {
         <div className="lg:sticky lg:top-24 lg:self-start">
           <div
             className="relative aspect-square rounded-[2rem] overflow-hidden shadow-soft"
-            style={{ background: resolveColor(product.swatch) }}
+            style={{ background: resolveColor(activeColorway?.color || product.swatch) }}
           >
             <img
-              src={gallery[activeImg]}
-              alt={product.name}
-              className="absolute inset-0 h-full w-full object-cover"
+              src={heroImage}
+              alt={`${product.name} — ${heroLabel}`}
+              className="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
             />
+            {activeColorway?.label ? (
+              <span className="absolute bottom-4 left-4 rounded-full bg-background/90 backdrop-blur px-3 py-1.5 text-xs font-semibold tracking-wide">
+                {activeColorway.label}
+              </span>
+            ) : null}
             <button
               onClick={() => toggleSaved(product.id)}
               className="absolute top-4 right-4 h-11 w-11 rounded-full bg-background/85 backdrop-blur flex items-center justify-center hover:scale-110 transition"
@@ -89,20 +120,31 @@ export default function ProductPage() {
               />
             </button>
           </div>
-          <div className="mt-4 grid grid-cols-4 gap-3">
-            {gallery.map((g, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveImg(i)}
-                className={`relative aspect-square rounded-2xl overflow-hidden transition ${
-                  activeImg === i ? "ring-2 ring-foreground" : "opacity-80 hover:opacity-100"
-                }`}
-                style={{ background: resolveColor(product.swatch) }}
-              >
-                <img src={g} alt="" className="absolute inset-0 h-full w-full object-cover" />
-              </button>
-            ))}
-          </div>
+          {gallery.length > 1 ? (
+            <div
+              className="mt-4 grid gap-3"
+              style={{ gridTemplateColumns: `repeat(${thumbCols}, minmax(0, 1fr))` }}
+            >
+              {gallery.map((cw, i) => (
+                <button
+                  key={cw.key}
+                  type="button"
+                  onClick={() => onSelectColorway(cw)}
+                  className={`relative aspect-square rounded-2xl overflow-hidden transition ${
+                    activeImg === i ? "ring-2 ring-foreground scale-[1.02]" : "opacity-85 hover:opacity-100"
+                  }`}
+                  style={{ background: resolveColor(cw.color || product.swatch) }}
+                  aria-label={`View ${cw.label}`}
+                  aria-pressed={activeImg === i}
+                >
+                  <img src={cw.image} alt={cw.label} className="absolute inset-0 h-full w-full object-cover" />
+                  <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent px-1.5 py-1 text-[9px] font-medium text-white truncate">
+                    {cw.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         {/* INFO */}
@@ -142,29 +184,20 @@ export default function ProductPage() {
             {product.description}
           </p>
 
-          {/* COLOR */}
-          <div className="mt-8">
-            <p className="text-xs font-semibold tracking-widest text-muted-foreground mb-3">COLOR</p>
-            <div className="flex gap-3">
-              {product.colors.map((c, i) => (
-                <button
-                  key={c}
-                  onClick={() => setColorIdx(i)}
-                  className={`h-11 w-11 rounded-full transition ${
-                    colorIdx === i ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "ring-1 ring-border"
-                  }`}
-                  style={{ background: resolveColor(c) }}
-                  aria-label={`Color ${i + 1}`}
-                />
-              ))}
-            </div>
-          </div>
+          <ProductColorPicker
+            product={product}
+            catalog={products}
+            selectedKey={selectedKey}
+            onSelectVariant={onSelectColorway}
+          />
 
           {/* SIZE */}
           <div className="mt-8">
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-semibold tracking-widest text-muted-foreground">SIZE (EU)</p>
-              <a className="text-xs underline text-muted-foreground" href="#">Size guide</a>
+              <a className="text-xs underline text-muted-foreground" href="#">
+                Size guide
+              </a>
             </div>
             <div className="flex flex-wrap gap-2.5">
               {product.sizes.map((s) => (
@@ -238,13 +271,13 @@ export default function ProductPage() {
           </button>
 
           <a
-            href={`https://wa.me/${(settings.whatsapp_number || "+254795704273").replace(/\D/g, "")}?text=Hi%20Iron%20Step!%20I%27d%20like%20to%20order%20the%20${encodeURIComponent(product.name)}%20(${encodeURIComponent(product.tagline)}).%20Please%20assist%20me.`}
+            href={`https://wa.me/${(settings.whatsapp_number || "+254795704273").replace(/\D/g, "")}?text=Hi%20Iron%20Step!%20I%27d%20like%20to%20order%20the%20${encodeURIComponent(product.name)}${activeColorway?.label ? `%20in%20${encodeURIComponent(activeColorway.label)}` : ""}%20(${encodeURIComponent(product.tagline)}).%20Please%20assist%20me.`}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-3 w-full rounded-full bg-[#25D366] text-white px-6 py-3.5 text-sm font-semibold hover:brightness-95 transition inline-flex items-center justify-center gap-2.5"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.125.298-.324.446-.486.149-.16.198-.297.298-.496.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.125.298-.324.446-.486.149-.16.198-.297.298-.496.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
             </svg>
             Order via WhatsApp
           </a>

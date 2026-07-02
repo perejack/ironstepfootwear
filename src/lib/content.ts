@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getSiteContent } from "@/lib/cms.api";
 import type { Tables } from "@/integrations/supabase/types";
+import { parseDbVariants } from "@/lib/product-variants";
 import {
   products as staticProducts,
   categories as staticCategoryNames,
@@ -164,7 +165,8 @@ export function productImage(row: Pick<DbProduct, "image_url" | "slug">): string
   return row.image_url || productImageFallbacks[row.slug] || heroShoe;
 }
 
-function mapProduct(row: DbProduct, catNames: Map<string, string>): Product {
+function mapProduct(row: DbProduct & { variants?: unknown; style_key?: string | null; color_label?: string | null }, catNames: Map<string, string>): Product {
+  const variants = parseDbVariants(row.variants);
   return {
     id: row.slug,
     name: row.name,
@@ -179,6 +181,9 @@ function mapProduct(row: DbProduct, catNames: Map<string, string>): Product {
     image: productImage(row),
     swatch: row.swatch || "oklch(0.9 0.03 80)",
     colors: row.colors,
+    variants,
+    styleKey: row.style_key ?? undefined,
+    colorLabel: row.color_label ?? undefined,
     description: row.description,
     features: row.features,
     sizes: row.sizes,

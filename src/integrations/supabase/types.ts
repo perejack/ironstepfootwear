@@ -64,6 +64,9 @@ export type Database = {
           sizes: number[]
           slug: string
           sort_order: number
+          style_key: string | null
+          color_label: string | null
+          variants: Json
           swatch: string | null
           tagline: string
           type: string
@@ -88,6 +91,9 @@ export type Database = {
           sizes?: number[]
           slug: string
           sort_order?: number
+          style_key?: string | null
+          color_label?: string | null
+          variants?: Json
           swatch?: string | null
           tagline?: string
           type?: string
@@ -112,6 +118,9 @@ export type Database = {
           sizes?: number[]
           slug?: string
           sort_order?: number
+          style_key?: string | null
+          color_label?: string | null
+          variants?: Json
           swatch?: string | null
           tagline?: string
           type?: string
