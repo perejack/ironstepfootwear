@@ -137,7 +137,7 @@ export function ProductsTab({
           rating: Math.min(5, Math.max(0, Number(draft.rating) || 4.8)),
           reviews: Math.max(0, Math.round(Number(draft.reviews) || 0)),
           badge: draft.badge || null,
-          image_url: variants[0]?.image_url || draft.image_url,
+          image_url: draft.image_url,
           swatch: resolveColor(draft.swatch) || null,
           colors: colorsFromVariants.length > 0 ? colorsFromVariants : parseColorList(draft.colors),
           variants,

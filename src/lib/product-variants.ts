@@ -39,10 +39,21 @@ export function parseDbVariants(raw: unknown): ProductVariant[] {
   return parseVariants(raw);
 }
 
+function getMainColorway(product: Product): ColorwayOption {
+  return {
+    key: `${product.id}-main`,
+    label: product.colorLabel || "Main",
+    color: product.colors[0] || product.swatch,
+    image: product.image,
+    slug: product.id,
+  };
+}
+
 /** All colour options for a product page (variants, linked styles, or legacy dots). */
 export function getColorways(product: Product, catalog: Product[]): ColorwayOption[] {
   if (product.variants.length > 0) {
-    return product.variants.map((v, i) => ({
+    const main = getMainColorway(product);
+    const variants = product.variants.map((v, i) => ({
       key: `${product.id}-v-${i}`,
       label: v.label,
       color: v.color,
@@ -50,6 +61,12 @@ export function getColorways(product: Product, catalog: Product[]): ColorwayOpti
       slug: product.id,
       variantIndex: i,
     }));
+
+    const hasDistinctMain = variants.every(
+      (v) => v.image !== main.image || v.label.toLowerCase() !== main.label.toLowerCase(),
+    );
+
+    return hasDistinctMain ? [main, ...variants] : variants;
   }
 
   if (product.styleKey) {
@@ -102,15 +119,7 @@ export function colorwayCount(product: Product, catalog: Product[]): number {
 export function getProductGallery(product: Product, catalog: Product[]): ColorwayOption[] {
   const onPage = getColorways(product, catalog).filter((o) => o.slug === product.id);
   if (onPage.length > 0) return onPage.slice(0, 4);
-  return [
-    {
-      key: `${product.id}-main`,
-      label: product.colorLabel || "Default",
-      color: product.colors[0] || product.swatch,
-      image: product.image,
-      slug: product.id,
-    },
-  ];
+  return [getMainColorway(product)];
 }
 
 export function swatchStyle(color: string) {
